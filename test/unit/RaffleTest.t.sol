@@ -135,7 +135,6 @@ contract RaffleTest is Test, CodeConstants {
         assert(upkeepNeeded == false);
     }
 
-    // Challenge 1. testCheckUpkeepReturnsFalseIfEnoughTimeHasntPassed
     function testCheckUpkeepReturnsFalseIfEnoughTimeHasntPassed() public {
         // Arrange
         vm.prank(PLAYER);
@@ -148,7 +147,6 @@ contract RaffleTest is Test, CodeConstants {
         assert(!upkeepNeeded);
     }
 
-    // Challenge 2. testCheckUpkeepReturnsTrueWhenParametersGood
     function testCheckUpkeepReturnsTrueWhenParametersGood() public {
         // Arrange
         vm.prank(PLAYER);
@@ -172,9 +170,7 @@ contract RaffleTest is Test, CodeConstants {
         raffle.enterRaffle{value: raffleEntranceFee}();
         vm.warp(block.timestamp + automationUpdateInterval + 1);
         vm.roll(block.number + 1);
-
-        // Act / Assert
-        // It doesnt revert
+        // If it doesn't revert => success
         raffle.performUpkeep("");
     }
 
@@ -205,7 +201,6 @@ contract RaffleTest is Test, CodeConstants {
 
         // Assert
         Raffle.RaffleState raffleState = raffle.getRaffleState();
-        // requestId = raffle.getLastRequestId();
         assert(uint256(requestId) > 0);
         assert(uint256(raffleState) == 1); // 0 = open, 1 = calculating
     }
@@ -232,7 +227,6 @@ contract RaffleTest is Test, CodeConstants {
         // Arrange
         // Act / Assert
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
-        // vm.mockCall could be used here...
         VRFCoordinatorV2_5Mock(vrfCoordinatorV2_5).fulfillRandomWords(0, address(raffle));
 
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
@@ -244,11 +238,11 @@ contract RaffleTest is Test, CodeConstants {
 
         // Arrange
         uint256 additionalEntrances = 3;
-        uint256 startingIndex = 1; // We have starting index be 1 so we can start with address(1) and not address(0)
+        uint256 startingIndex = 1; // address(0) should be avoived, that's why starts from 1
 
         for (uint256 i = startingIndex; i < startingIndex + additionalEntrances; i++) {
             address player = address(uint160(i));
-            hoax(player, 1 ether); // deal 1 eth to the player
+            hoax(player, 1 ether);
             raffle.enterRaffle{value: raffleEntranceFee}();
         }
 
@@ -257,10 +251,10 @@ contract RaffleTest is Test, CodeConstants {
 
         // Act
         vm.recordLogs();
-        raffle.performUpkeep(""); // emits requestId
+        raffle.performUpkeep("");
         Vm.Log[] memory entries = vm.getRecordedLogs();
         console.logBytes32(entries[1].topics[1]);
-        bytes32 requestId = entries[1].topics[1]; // get the requestId from the logs
+        bytes32 requestId = entries[1].topics[1];
 
         VRFCoordinatorV2_5Mock(vrfCoordinatorV2_5).fulfillRandomWords(uint256(requestId), address(raffle));
 
